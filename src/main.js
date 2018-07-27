@@ -3,6 +3,14 @@ import App from './App.vue'
 
 Vue.config.productionTip = false
 
+export const bus = new Vue();
+
+/* eslint-disable no-new */
+/*
 new Vue({
-  render: h => h(App)
-}).$mount('#app')
+	el: '#app',
+	template: '<App/>',
+	components: { App }
+})*/;
+
+new Vue(App).$mount('#app')

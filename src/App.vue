@@ -1,28 +1,57 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <h1 class="label">NLP-sovellus</h1>
+
+    <toolbar :current-comp="currentComp"></toolbar>
+
+    <div class="container">
+      <component :is="currentComp"></component>
+    </div>
   </div>
 </template>
 
+
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Toolbar from './components/Toolbar.vue';
+import NERWizard from './components/NERWizard.vue';
+import SummarizeWizard from './components/SummarizeWizard.vue';
+import { bus } from './main.js';
 
 export default {
-  name: 'app',
+  el: '#app',
+
+  data() {
+    return {
+      currentComp: 'summarize-wizard'
+    };
+  },
+
+  created() {
+      bus.$on('switchComp', comp => {
+           this.currentComp = comp;
+      })
+  },
+
   components: {
-    HelloWorld
+    'toolbar': Toolbar,
+    'named-entity-recognition': NERWizard,
+    'summarize-wizard': SummarizeWizard
   }
 }
 </script>
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+<style scoped>
+.container {
+  width: 450px;
+  height: 670px;
+  margin: 5px;
+  padding: 10px;
+  border: 1px solid blue;
+}
+
+.label {
+  font-size: 20px;
+  color: blue;
+  margin-right: 20px;
 }
 </style>
