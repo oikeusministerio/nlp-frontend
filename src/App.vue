@@ -16,10 +16,25 @@ import Toolbar from './components/Toolbar.vue';
 import NERWizard from './components/NERWizard.vue';
 import SummarizeWizard from './components/SummarizeWizard.vue';
 import { bus } from './main.js';
+import Vue from 'vue';
+import Vuex from 'vuex'
+import {SET_NER_FILE} from './mutation-types.js';
+
+Vue.use(Vuex)
+const store = new Vuex.Store({
+  state: {
+    nerFile: null,
+  },
+  mutations: {
+    [SET_NER_FILE] (state, file) {
+      state.nerFile = file
+    },
+  }
+})
 
 export default {
   el: '#app',
-
+  store,
   data() {
     return {
       currentComp: 'summarize-wizard'
