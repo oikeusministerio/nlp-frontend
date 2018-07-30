@@ -2,6 +2,7 @@
  <form-wizard @on-complete="onComplete"
                        @on-error="handleErrorMessage"
                        @on-loading="setLoading"
+                       @on-validate="fetchNERs"
                        :start-index="0"
                        title="Henkilötietojen piilottaminen"
                        subtitle="Korvaa erisnimet ja henkilötunnukset tekstistä"
@@ -15,31 +16,29 @@
      </tab-content>
      <tab-content title="Valitse korvattavat sanat"
                   icon="ti-settings">
-      <fieldset>
-          <legend>Valitse korvattavat sanat</legend>
+      <div v-show="!$store.state.ners_fetched"> Loading </div>
+      <div v-show="$store.state.ners_fetched">
+        <fieldset>
+            <legend>Valitse korvattavat sanat</legend>
 
-          <div>
-              <input type="checkbox" id="hessu" name="feature"
-                     value="scales" />
-              <label for="hessu">Hessu Hopo</label>
-          </div>
+            <div >
+                <input type="checkbox" id="select_all" value="select_all" name="feature" v-on:change="selectAllNERs($event)" />
+                <label for="select_all">Valitse kaikki</label>
+            </div>
 
-          <div>
-              <input type="checkbox" id="hetu" name="feature"
-                     value="horns" />
-              <label for="hetu">010150-1234</label>
-          </div>
-
-          <div>
-              <input type="checkbox" id="berlin" name="feature"
-                     value="berlin" />
-              <label for="berlin">Berliini</label>
-          </div>
-
-      </fieldset>
+            <div v-for="(name, index) in this.$store.state.nernames" v-bind:key="index">
+                <input type="checkbox" v-bind:id="name" v-bind:value="name" name="feature" v-on:change="addNERToBeSubstituted($event)" />
+                <label v-bind:for="name">{{name}}</label>
+            </div>
+        </fieldset>
+      </div>
      </tab-content>
      <tab-content title="Syötetiedoston muoto"
                   icon="ti-check">
+
+      <h3>Korvataan sanat </h3>
+      <span v-for="(name, index) in this.$store.state.substitute_list" v-bind:key="index">{{name}} </span>
+      <br><br>
        Missä muodossa haluat tiedoston ulos?
        <select id="returnType">
           <option value="docx">Docx (word) tiedosto </option>
@@ -67,7 +66,7 @@ export default {
     return {
      loadingWizard: false,
      errorMsg: null,
-     count: 0
+     count: 0,
     }
   },
    methods: {
@@ -102,10 +101,44 @@ export default {
            } else {
              resolve(true)
            }
-         }).then((response) => {
-           alert('fetch form server' + response) // TODO send file to server to get ners
-           return true;
          })
+           /*
+           ; */
+       },
+       fetchNERs: function() {
+         const file = this.$store.state.nerFile
+         const path = 'http://127.0.0.1:5000/entities/directory'
+         var fd = new FormData();
+         fd.append("file-0", file);
+         fetch(path + '?return_type=json', { // Your POST endpoint
+           method: 'POST',
+           body: fd
+         }).then(res=>res.json())
+         .then((response) => {
+
+           const namesObject = response.names
+           const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
+           this.$store.commit('SET_NER_NAMES', names)
+         }).catch((e) => {
+           // eslint-disable-next-line
+           error.log(e);
+         })
+       },
+       addNERToBeSubstituted: function(e) {
+         this.$store.commit('ADD_NER_TO_SUBSITUTE_LIST', e.currentTarget.value)
+       },
+       selectAllNERs: function(e) {
+         var checked = true//!e.currentTarget.checked;
+         const checkboxes = document.getElementsByName(e.currentTarget.name);
+         for(var i in checkboxes) {
+           var box = checkboxes[i]
+           if (box instanceof HTMLInputElement) {
+             box.checked = checked
+             if (box.value != 'select_all') {
+               this.$store.commit('ADD_NER_TO_SUBSITUTE_LIST', box.value)
+             }
+           }
+         }
        }
     }
 }
