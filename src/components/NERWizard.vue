@@ -37,7 +37,7 @@
                   icon="ti-check">
 
       <h3>Korvataan sanat </h3>
-      <span v-for="(name, index) in this.$store.state.substitute_list" v-bind:key="index">{{name}} </span>
+      <span v-for="(name, index) in this.$store.state.substituteList" v-bind:key="index">{{name}} </span>
       <br><br>
        Missä muodossa haluat tiedoston ulos?
        <select id="returnType">
@@ -69,7 +69,7 @@ export default {
      count: 0,
     }
   },
-   methods: {
+  methods: {
      setNerFile: function(e) {
        this.$store.commit('SET_NER_FILE', e.currentTarget.files[0])
      },

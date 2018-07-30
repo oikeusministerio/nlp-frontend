@@ -29,29 +29,33 @@ const store = new Vuex.Store({
     nerFile: null,
     nernames: [],
     ners_fetched: false,
-    substitute_list: []
+    substituteList: []
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
       state.nerFile = file
     },
     [SET_NER_NAMES] (state, names) {
-      state.nernames = names
+      state.nernames = names.sort((a,b) => a > b)
       state.ners_fetched = true
     },
     [ADD_NER_TO_SUBSITUTE_LIST] (state, name) {
-      const index = state.substitute_list.indexOf(name)
+      const index = state.substituteList.indexOf(name)
       if (index != -1) {
-        state.substitute_list = state.substitute_list.splice(index, 1) // remove
+        state.substituteList.splice(index, 1) // remove
       } else {
-        state.substitute_list.push(name)
+        state.substituteList.push(name)
       }
     }
   },
   plugins: [
     createPersistedState({
-      getState: (key) => Cookies.getJSON(key),
-      setState: (key, state) => Cookies.set(key, state, { expires: 3, secure: true })
+      storage: {
+        getItem: key => Cookies.get(key),
+        // Please see https://github.com/js-cookie/js-cookie#json, on how to handle JSON.
+        setItem: (key, value) => Cookies.set(key, value, { expires: 3, secure: true }),
+        removeItem: key => Cookies.remove(key)
+      }
     }),
     createLogger()
   ]
@@ -83,7 +87,7 @@ export default {
 <style scoped>
 .container {
   width: 450px;
-  height: 670px;
+  height: auto;
   margin: 5px;
   padding: 10px;
   border: 1px solid blue;
