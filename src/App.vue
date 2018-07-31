@@ -24,12 +24,24 @@ import { bus } from './main.js';
 import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION} from './mutation-types.js';
 
 
+function fetchApiUrl() {
+  var request = new XMLHttpRequest();
+  request.open('GET', '/config', false);
+  request.send(null);
+  debugger;
+  var json = JSON.parse(request.responseText)
+  return json.apiurl
+}
+
+const API_URL = (process.env.NODE_ENV == 'development') ? 'http://127.0.0.1:5000' : fetchApiUrl()
+
 Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
     nerFile: null,
     nernames: [],
-    ners_fetched: false
+    ners_fetched: false,
+    apiurl: API_URL
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
@@ -67,7 +79,7 @@ export default {
   store,
   data() {
     return {
-      currentComp: 'summarize-wizard'
+      currentComp: 'named-entity-recognition'
     };
   },
 

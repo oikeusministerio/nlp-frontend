@@ -141,7 +141,8 @@ export default {
        },
        fetchNERs: function() {
          const file = this.$store.state.nerFile
-         const path = 'http://127.0.0.1:5000/entities/directory'
+         const apiurl = this.$store.state.apiurl
+         const path = apiurl + '/entities/directory'
          var fd = new FormData();
          fd.append("file-0", file);
          fetch(path + '?return_type=json', { // Your POST endpoint
@@ -189,7 +190,8 @@ export default {
          const words = filtered.map(obj => obj.name)
          const substitutes = filtered.map(obj => obj.substitute)
          const file = this.$store.state.nerFile
-         var path = 'http://127.0.0.1:5000/entities/replace'
+         const apiurl = this.$store.state.apiurl
+         var path = apiurl + '/entities/replace' // http://127.0.0.1:5000
          var fd = new FormData();
          fd.append("file-0", file);
          path += "?return_type=docx&"
