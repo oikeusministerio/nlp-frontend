@@ -1,13 +1,7 @@
 <template>
   <div>
     <span class="label">Lauseiden valinta</span>
-
-    <div class="container">
-      <div
-        :key="note.id"
-        v-for="note in notes"
-      ></div>
-    </div>
+    <h1>Tulossa pian</h1>
   </div>
 </template>
 

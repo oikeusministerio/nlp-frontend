@@ -21,31 +21,32 @@ import Toolbar from './components/Toolbar.vue';
 import NERWizard from './components/NERWizard.vue';
 import SummarizeWizard from './components/SummarizeWizard.vue';
 import { bus } from './main.js';
-import {SET_NER_FILE, SET_NER_NAMES, ADD_NER_TO_SUBSITUTE_LIST} from './mutation-types.js';
+import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION} from './mutation-types.js';
+
 
 Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
     nerFile: null,
     nernames: [],
-    ners_fetched: false,
-    substituteList: []
+    ners_fetched: false
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
       state.nerFile = file
     },
-    [SET_NER_NAMES] (state, names) {
-      state.nernames = names.sort((a,b) => a > b)
+    [ADD_NER_NAME] (state, payload) {
+      state.nernames.push(payload)
+      state.nernames = state.nernames.sort((a,b) => a.name > b.name)
       state.ners_fetched = true
     },
-    [ADD_NER_TO_SUBSITUTE_LIST] (state, name) {
-      const index = state.substituteList.indexOf(name)
-      if (index != -1) {
-        state.substituteList.splice(index, 1) // remove
-      } else {
-        state.substituteList.push(name)
-      }
+    [TOGGLE_SUBSTITION] (state, name) {
+      var objIndex = state.nernames.findIndex((obj => obj.name == name ));
+      state.nernames[objIndex].selected = !state.nernames[objIndex].selected
+    },
+    [CHANGE_SUBSTITION] (state, payload) {
+      var objIndex = state.nernames.findIndex((obj => obj.name == payload.name ));
+      state.nernames[objIndex].substitute = payload.substitute
     }
   },
   plugins: [

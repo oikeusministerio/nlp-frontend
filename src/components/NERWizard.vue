@@ -15,7 +15,8 @@
        <input id="ner_file" type="file" v-on:change="setNerFile($event)"/>
      </tab-content>
      <tab-content title="Valitse korvattavat sanat"
-                  icon="ti-settings">
+                  icon="ti-settings"
+                  :before-change="validateChosenNERs" >
       <div v-show="!$store.state.ners_fetched"> Loading </div>
       <div v-show="$store.state.ners_fetched">
         <fieldset>
@@ -26,9 +27,11 @@
                 <label for="select_all">Valitse kaikki</label>
             </div>
 
-            <div v-for="(name, index) in this.$store.state.nernames" v-bind:key="index">
-                <input type="checkbox" v-bind:id="name" v-bind:value="name" name="feature" v-on:change="addNERToBeSubstituted($event)" />
-                <label v-bind:for="name">{{name}}</label>
+            <div v-for="(item, index) in this.$store.state.nernames" v-bind:key="index" class="ner-row">
+                <input type="checkbox" v-bind:id="item.name" v-bind:value="item.name" name="feature" v-on:change="addNERToBeSubstituted($event)" />
+                <label v-bind:for="item.name">{{item.name}}</label>
+
+                <input type="text" v-bind:id="item.name + '-substitute'" placeholder="Korvike" v-bind:value="item.substitute" v-on:change="changeSubstitute($event)" />
             </div>
         </fieldset>
       </div>
@@ -38,7 +41,10 @@
                   :before-change="replaceWords">
 
       <h3>Korvataan sanat </h3>
-      <span v-for="(name, index) in this.$store.state.substituteList" v-bind:key="index">{{name}} </span>
+      <div class="substitute-pairs">
+        <span class="sub-pair" v-for="(item, index) in this.$store.state.nernames.filter(obj => obj.selected)"
+              v-bind:key="index">{{item.name }} => {{ item.substitute}} </span>
+      </div>
       <br><br>
        Missä muodossa haluat tiedoston ulos?
        <select id="returnType">
@@ -61,6 +67,18 @@ import Vue from 'vue';
 import VueFormWizard from 'vue-form-wizard';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { saveAs } from 'file-saver/FileSaver';
+import { getSubstiteByIndex } from './tools.js';
+
+function toggleSubstituteMap(store, value) {
+  const keys = store.state.nernames.filter((obj) => obj.selected)
+  const keyId = keys.length
+  const substitute = getSubstiteByIndex(keyId)
+  const payload = {name: value, substitute: substitute}
+  store.commit('TOGGLE_SUBSTITION', value)
+  if (store.state.nernames.find(obj => obj.name == value).substitute == '') {
+      store.commit('CHANGE_SUBSTITION', payload)
+  }
+}
 
 Vue.use(VueFormWizard)
 export default {
@@ -84,6 +102,22 @@ export default {
      handleErrorMessage: function(errorMsg){
        this.errorMsg = errorMsg
      },
+     validateChosenNERs: function() {
+       const state = this.$store.state
+       return new Promise((resolve, reject) => {
+         if(state.nernames.length == 0) {
+           reject('Henkilötiedot eivät ole vielä latautuneet tai yhtäkään ei löytynyt.')
+         }
+         if (state.nernames.filter(obj => obj.selected ).length == 0) {
+           reject('Valitse ainakin yksi henkilötieto korvattavaksi.')
+         }
+         const emptys = state.nernames.filter(obj => obj.selected && (obj.substitute == null || obj.substitute == '' ))
+         if (emptys.length > 0) {
+           reject('Anna korvikkeet henkilötiedoille: ' + emptys.map(obj => obj.name).join(', ') + ' ');
+         }
+         resolve(true)
+       })
+     },
      validateNerFile: function() {
        const file = this.$store.state.nerFile
        return new Promise((resolve, reject) => {
@@ -104,8 +138,6 @@ export default {
              resolve(true)
            }
          })
-           /*
-           ; */
        },
        fetchNERs: function() {
          const file = this.$store.state.nerFile
@@ -119,36 +151,50 @@ export default {
          .then((response) => {
            const namesObject = response.names
            const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
-           this.$store.commit('SET_NER_NAMES', names)
+           for (var i = 0; i < names.length; i++) {
+             var exists = (this.$store.state.nernames.length == 0) ? false : this.$store.state.nernames.some((obj) => obj.name == names[i])
+             if (!exists) {
+               this.$store.commit('ADD_NER_NAME', {
+                 name: names[i],
+                 selected: false,
+                 substitute: ''
+               })
+             }
+           }
          }).catch((e) => {
            // eslint-disable-next-line
            error.log(e);
          })
        },
        addNERToBeSubstituted: function(e) {
-         this.$store.commit('ADD_NER_TO_SUBSITUTE_LIST', e.currentTarget.value)
+         const value = e.currentTarget.value
+         toggleSubstituteMap(this.$store, value)
        },
        selectAllNERs: function(e) {
-         var checked = true//!e.currentTarget.checked;
+         var checked = e.currentTarget.checked;
          const checkboxes = document.getElementsByName(e.currentTarget.name);
          for(var i in checkboxes) {
            var box = checkboxes[i]
            if (box instanceof HTMLInputElement) {
+             var needToggle = box.checked !== checked
              box.checked = checked
-             if (box.value != 'select_all') {
-               this.$store.commit('ADD_NER_TO_SUBSITUTE_LIST', box.value)
+             if (box.value != 'select_all' && needToggle) {
+               toggleSubstituteMap(this.$store, box.value)
              }
            }
          }
        },
        replaceWords: function() {
-         const words = this.$store.state.substituteList
+         const filtered = this.$store.state.nernames.filter(obj => obj.selected)
+         const words = filtered.map(obj => obj.name)
+         const substitutes = filtered.map(obj => obj.substitute)
          const file = this.$store.state.nerFile
          var path = 'http://127.0.0.1:5000/entities/replace'
          var fd = new FormData();
          fd.append("file-0", file);
          path += "?return_type=docx&"
-         path += "nerlist=" + encodeURIComponent(JSON.stringify(words));
+         path += "nerlist=" + encodeURIComponent(JSON.stringify(words)) + "&";
+         path += "substitutes=" + encodeURIComponent(JSON.stringify(substitutes))
          fetch(path, {
            method: 'POST',
            body: fd
@@ -159,7 +205,16 @@ export default {
            // eslint-disable-next-line
            error.log(e)
          })
-       }
+       },
+        changeSubstitute: function(e) {
+        const id = e.currentTarget.id
+        const name = id.substring(0, id.length - 11)
+        const newSubstitute = e.currentTarget.value
+        this.$store.commit('CHANGE_SUBSTITION', {
+          name: name,
+          substitute: newSubstitute
+        })
+      }
     }
 }
 </script>
@@ -167,5 +222,20 @@ export default {
 <style scoped>
 .error {
     color: red;
+}
+.ner-row {
+  display: flex;
+  justify-content: space-between;
+}
+.substitute-words {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.sub-pair {
+  border: 1px solid black;
+  margin: 2px 2px 2px 2px;
+  line-height: 1.5;
+  display: inline-block;
 }
 </style>
