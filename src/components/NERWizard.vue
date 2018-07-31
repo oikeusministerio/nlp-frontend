@@ -34,7 +34,8 @@
       </div>
      </tab-content>
      <tab-content title="Syötetiedoston muoto"
-                  icon="ti-check">
+                  icon="ti-check"
+                  :before-change="replaceWords">
 
       <h3>Korvataan sanat </h3>
       <span v-for="(name, index) in this.$store.state.substituteList" v-bind:key="index">{{name}} </span>
@@ -59,6 +60,7 @@
 import Vue from 'vue';
 import VueFormWizard from 'vue-form-wizard';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
+import { saveAs } from 'file-saver/FileSaver';
 
 Vue.use(VueFormWizard)
 export default {
@@ -115,7 +117,6 @@ export default {
            body: fd
          }).then(res=>res.json())
          .then((response) => {
-
            const namesObject = response.names
            const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
            this.$store.commit('SET_NER_NAMES', names)
@@ -139,6 +140,25 @@ export default {
              }
            }
          }
+       },
+       replaceWords: function() {
+         const words = this.$store.state.substituteList
+         const file = this.$store.state.nerFile
+         var path = 'http://127.0.0.1:5000/entities/replace'
+         var fd = new FormData();
+         fd.append("file-0", file);
+         path += "?return_type=docx&"
+         path += "nerlist=" + encodeURIComponent(JSON.stringify(words));
+         fetch(path, {
+           method: 'POST',
+           body: fd
+         }).then(res => res.blob())
+        .then((res) => {
+            saveAs(res)
+         }).catch((e) => {
+           // eslint-disable-next-line
+           error.log(e)
+         })
        }
     }
 }
