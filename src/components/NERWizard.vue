@@ -21,17 +21,17 @@
       <div v-show="$store.state.ners_fetched">
         <fieldset>
             <legend>Valitse korvattavat sanat</legend>
-
-            <div >
+            <div class="ner-row">
                 <input type="checkbox" id="select_all" value="select_all" name="feature" v-on:change="selectAllNERs($event)" />
-                <label for="select_all">Valitse kaikki</label>
+                <label for="select_all"><b>Valitse kaikki sanat</b></label>
             </div>
+            <div class="ner-container">
+              <div v-for="(item, index) in this.$store.state.nernames" v-bind:key="index" class="ner-row">
+                  <input type="checkbox" v-bind:id="item.name" v-bind:value="item.name" name="feature" v-on:change="addNERToBeSubstituted($event)" />
+                  <label v-bind:for="item.name">{{item.name}}</label>
 
-            <div v-for="(item, index) in this.$store.state.nernames" v-bind:key="index" class="ner-row">
-                <input type="checkbox" v-bind:id="item.name" v-bind:value="item.name" name="feature" v-on:change="addNERToBeSubstituted($event)" />
-                <label v-bind:for="item.name">{{item.name}}</label>
-
-                <input type="text" v-bind:id="item.name + '-substitute'" placeholder="Korvike" v-bind:value="item.substitute" v-on:change="changeSubstitute($event)" />
+                  <input type="text" v-bind:id="item.name + '-substitute'" placeholder="Korvike" v-bind:value="item.substitute" v-on:change="changeSubstitute($event)" />
+              </div>
             </div>
         </fieldset>
       </div>
@@ -47,9 +47,9 @@
       </div>
       <br><br>
        Missä muodossa haluat tiedoston ulos?
-       <select id="returnType">
+       <select id="returnType" v-on:change="changeNerReturnType($event)" >
           <option value="docx">Docx (word) tiedosto </option>
-          <option value="docx">Teksi (.txt) tiedosto </option>
+          <option value="txt">Teksi (.txt) tiedosto </option>
         </select>
 
      </tab-content>
@@ -191,10 +191,11 @@ export default {
          const substitutes = filtered.map(obj => obj.substitute)
          const file = this.$store.state.nerFile
          const apiurl = this.$store.state.apiurl
+         const returnType = this.$store.state.nerReturnType
          var path = apiurl + '/entities/replace' // http://127.0.0.1:5000
          var fd = new FormData();
          fd.append("file-0", file);
-         path += "?return_type=docx&"
+         path += "?return_type=" + returnType + "&"
          path += "nerlist=" + encodeURIComponent(JSON.stringify(words)) + "&";
          path += "substitutes=" + encodeURIComponent(JSON.stringify(substitutes))
          fetch(path, {
@@ -216,6 +217,10 @@ export default {
           name: name,
           substitute: newSubstitute
         })
+      },
+      changeNerReturnType: function(e) {
+        const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
+        this.$store.commit('CHANGE_NER_RETURN_TYPE', returnType)
       }
     }
 }
@@ -225,9 +230,14 @@ export default {
 .error {
     color: red;
 }
+.ner-container {
+  display: flex;
+  flex-wrap: wrap;
+}
 .ner-row {
   display: flex;
   justify-content: space-between;
+  width: 40%;
 }
 .substitute-words {
   display: flex;

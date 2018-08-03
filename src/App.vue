@@ -20,15 +20,16 @@ import createLogger from 'vuex/dist/logger'
 import Toolbar from './components/Toolbar.vue';
 import NERWizard from './components/NERWizard.vue';
 import SummarizeWizard from './components/SummarizeWizard.vue';
+import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { bus } from './main.js';
-import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION} from './mutation-types.js';
+import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION,
+        CHANGE_NER_RETURN_TYPE} from './mutation-types.js';
 
 
 function fetchApiUrl() {
   var request = new XMLHttpRequest();
   request.open('GET', '/config', false);
   request.send(null);
-  debugger;
   var json = JSON.parse(request.responseText)
   return json.apiurl
 }
@@ -41,7 +42,8 @@ const store = new Vuex.Store({
     nerFile: null,
     nernames: [],
     ners_fetched: false,
-    apiurl: API_URL
+    apiurl: API_URL,
+    nerReturnType: 'docx'
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
@@ -59,6 +61,9 @@ const store = new Vuex.Store({
     [CHANGE_SUBSTITION] (state, payload) {
       var objIndex = state.nernames.findIndex((obj => obj.name == payload.name ));
       state.nernames[objIndex].substitute = payload.substitute
+    },
+    [CHANGE_NER_RETURN_TYPE] (state, returnType) {
+      state.nerReturnType = returnType
     }
   },
   plugins: [
@@ -99,7 +104,7 @@ export default {
 
 <style scoped>
 .container {
-  width: 450px;
+  width: 1000px;
   height: auto;
   margin: 5px;
   padding: 10px;
@@ -108,7 +113,6 @@ export default {
 
 .label {
   font-size: 20px;
-  color: blue;
   margin-right: 20px;
 }
 </style>
