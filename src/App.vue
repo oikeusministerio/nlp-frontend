@@ -23,7 +23,7 @@ import SummarizeWizard from './components/SummarizeWizard.vue';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { bus } from './main.js';
 import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION,
-        CHANGE_NER_RETURN_TYPE} from './mutation-types.js';
+        CHANGE_NER_RETURN_TYPE, CHANGE_NER_TOGGLE_SEARCH_PERSONID} from './mutation-types.js';
 
 
 function fetchApiUrl() {
@@ -43,11 +43,14 @@ const store = new Vuex.Store({
     nernames: [],
     ners_fetched: false,
     apiurl: API_URL,
-    nerReturnType: 'docx'
+    nerReturnType: 'docx',
+    nerSearchPersonid: true
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
       state.nerFile = file
+      state.ners_fetched = false
+      state.nernames = []
     },
     [ADD_NER_NAME] (state, payload) {
       state.nernames.push(payload)
@@ -64,6 +67,9 @@ const store = new Vuex.Store({
     },
     [CHANGE_NER_RETURN_TYPE] (state, returnType) {
       state.nerReturnType = returnType
+    },
+    [CHANGE_NER_TOGGLE_SEARCH_PERSONID] (state) {
+      state.nerSearchPersonid = !state.nerSearchPersonid
     }
   },
   plugins: [

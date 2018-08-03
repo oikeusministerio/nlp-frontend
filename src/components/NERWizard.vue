@@ -13,6 +13,12 @@
 
        <p > Anna tiedosto, joka sisältää korvattavan tekstin. </p>
        <input id="ner_file" type="file" v-on:change="setNerFile($event)"/>
+
+       <div>
+           <input type="checkbox" id="detect_hetu" v-model="checked" />
+           <label for="detect_hetu">Hae samalla HETUT (muodossa 010101-1234) korvattavaksi. </label>
+       </div>
+
      </tab-content>
      <tab-content title="Valitse korvattavat sanat"
                   icon="ti-settings"
@@ -142,10 +148,13 @@ export default {
        fetchNERs: function() {
          const file = this.$store.state.nerFile
          const apiurl = this.$store.state.apiurl
-         const path = apiurl + '/entities/directory'
+         const searchPersonid = this.$store.state.nerSearchPersonid
+         var path = apiurl + '/entities/directory'
+         path += '?return_type=json&'
+         path += 'person_ids=' + searchPersonid
          var fd = new FormData();
          fd.append("file-0", file);
-         fetch(path + '?return_type=json', { // Your POST endpoint
+         fetch(path, {
            method: 'POST',
            body: fd
          }).then(res=>res.json())
@@ -221,6 +230,16 @@ export default {
       changeNerReturnType: function(e) {
         const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
         this.$store.commit('CHANGE_NER_RETURN_TYPE', returnType)
+      }
+    },
+    computed: {
+      checked: {
+        get () {
+          return this.$store.state.nerSearchPersonid
+        },
+        set (value) {
+          this.$store.commit('CHANGE_NER_TOGGLE_SEARCH_PERSONID')
+        }
       }
     }
 }
