@@ -6,7 +6,10 @@
                :start-index="0"
                title="Henkilötietojen piilottaminen"
                subtitle="Korvaa erisnimet ja henkilötunnukset tekstistä"
-               color="#e67e22">
+               color="#e67e22"
+               back-button-text="Edellinen"
+               next-button-text="Seuraava"
+               finish-button-text="Korvaa">
    <tab-content title="Tiedosto"
                   :before-change="validateNerFile"
                   icon="ti-user">
@@ -24,7 +27,6 @@
      <tab-content title="Valitse korvattavat sanat"
                   icon="ti-settings"
                   :before-change="validateChosenNERs" >
-      <div v-show="!$store.state.ners_fetched"> Loading </div>
       <div v-show="$store.state.ners_fetched">
         <fieldset>
             <legend>Valitse korvattavat sanat</legend>
@@ -61,7 +63,7 @@
 
      </tab-content>
 
-     <div class="loader" v-if="loadingWizard"></div>
+     <div class="loader" v-if="loadingWizard">LOLO</div>
       <div v-if="errorMsg">
         <span class="error">{{errorMsg}}</span>
       </div>
@@ -75,6 +77,7 @@ import VueFormWizard from 'vue-form-wizard';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { saveAs } from 'file-saver/FileSaver';
 import { getSubstiteByIndex, validateFileInput } from './tools.js';
+import '../styles/loader.css';
 
 function toggleSubstituteMap(store, value) {
   const keys = store.state.nernames.filter((obj) => obj.selected)
@@ -143,6 +146,7 @@ export default {
            body: fd
          }).then(res=>res.json())
          .then((response) => {
+           this.setLoading(false);
            const namesObject = response.names
            const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
            for (var i = 0; i < names.length; i++) {
@@ -159,6 +163,7 @@ export default {
            // eslint-disable-next-line
            error.log(e);
          })
+         this.setLoading(true)
        },
        addNERToBeSubstituted: function(e) {
          const value = e.currentTarget.value
@@ -236,48 +241,7 @@ span.error{
   display:flex;
   justify-content:center;
 }
-/* This is a css loader. It's not related to vue-form-wizard */
-.loader,
-.loader:after {
-  border-radius: 50%;
-  width: 10em;
-  height: 10em;
-}
-.loader {
-  margin: 60px auto;
-  font-size: 10px;
-  position: relative;
-  text-indent: -9999em;
-  border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-left: 1.1em solid #e74c3c;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-animation: load8 1.1s infinite linear;
-  animation: load8 1.1s infinite linear;
-}
-@-webkit-keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
+
 .ner-container {
   display: flex;
   flex-wrap: wrap;

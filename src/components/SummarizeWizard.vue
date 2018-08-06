@@ -6,8 +6,12 @@
                   subtitle="Valitsee laskennallisesti merkityksellisimmät lauseet"
                   shape="circle"
                   color="gray"
-                  error-color="#e74c3c">
-    <tab-content title="Personal details"
+                  error-color="#e74c3c"
+                  back-button-text="Edellinen"
+                  next-button-text="Seuraava"
+                  finish-button-text="Tiivistä">
+
+    <tab-content title="Tiivistettävät tiedostot"
                  :before-change="validateFileInput"
                  icon="ti-user">
 
@@ -54,11 +58,24 @@
     </tab-content>
     <tab-content title="Syötetiedoston muoto"
                  icon="ti-check">
-             Missä muodossa haluat tiedoston ulos?
+                 <h3>Lähetetään tiedostot palvelimelle</h3>
+                 <div >Syötetyt tiedostot:
+                   <span v-for="(fn, i) in summaryFileNames"
+                         v-bind:key="i"> {{fn}} </span>
+                 </div>
+                 <div >Käytettävä menetelmä:
+                   <span>{{this.$store.state.summaryMethod}}</span>
+                 </div>
+                 <div >Tiivistelmän pituus sanoissa:
+                   <span>{{this.$store.state.summaryLength}}</span>
+                 </div>
+             Missä tiedostomuodossa tiivistelmä tulostetaan?
              <select id="returnType" v-on:change="changeSummaryReturnType($event)" >
                 <option value="docx">Word (.docx) tiedosto </option>
-                <option value="txt">Teksi (.txt) tiedosto </option>
+                <option value="txt">Teksti (.txt) tiedosto </option>
               </select>
+              <br>
+              <p v-if="loadingWizard" >Tiedostot lähetetty palvelimelle Tässä voi mennä useita minutteja, riippuen tiedostojen koosta.</p>
     </tab-content>
 
     <div class="loader" v-if="loadingWizard"></div>
@@ -72,9 +89,11 @@
 <script>
 import Vue from 'vue';
 import VueFormWizard from 'vue-form-wizard';
+import { saveAs } from 'file-saver/FileSaver';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { validateFileInput } from './tools.js';
 import '../styles/tooltip.css';
+import '../styles/loader.css';
 
 Vue.use(VueFormWizard)
 export default {
@@ -95,9 +114,6 @@ export default {
      }
     },
     methods: {
-     onComplete: function(){
-         alert('Yay. Done!');
-      },
       setLoading: function(value) {
           this.loadingWizard = value
       },
@@ -130,6 +146,37 @@ export default {
        changeSummaryReturnType: function(e) {
          const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
          this.$store.commit('CHANGE_SUMMARY_RETURN_TYPE', returnType)
+       },
+       onComplete: function(){
+          const {summaryFiles,summaryMethod,summaryLength,summaryReturnType,apiurl} = this.$store.state
+
+          var path = apiurl + '/summarize/directory'
+          var fd = new FormData();
+          for (var i = 0; i < summaryFiles.length; i++) {
+            fd.append("file-"+i, summaryFiles[i]);
+          }
+          path += "?return_type=" + summaryReturnType + "&"
+          path += "method=" + summaryMethod + "&"
+          path += "summary_length=" + summaryLength
+          fetch(path, {
+            method: 'POST',
+            body: fd
+          }).then(res => res.blob())
+         .then((res) => {
+             this.setLoading(false)
+             saveAs(res)
+          }).catch((e) => {
+            // eslint-disable-next-line
+            error.log(e)
+          })
+          this.setLoading(true)
+          alert(text)
+        },
+     },
+     computed: {
+       summaryFileNames: function() {
+         const summaryFiles = this.$store.state.summaryFiles
+         return Object.keys(summaryFiles).map(id => summaryFiles[id].name)
        }
      }
 }

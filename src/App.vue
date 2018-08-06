@@ -47,10 +47,11 @@ const store = new Vuex.Store({
     apiurl: API_URL,
     nerReturnType: 'docx',
     nerSearchPersonid: true,
-    summaryFiles: null,
+    summaryFiles: [],
     summaryMethod: 'embedding',
     summaryLength: 25,
-    summaryReturnType: 'docx'
+    summaryReturnType: 'docx',
+    summarySent: false
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
