@@ -1,39 +1,156 @@
 <template>
-  <div>
-    <span class="label">Lauseiden valinta</span>
-    <h1>Tulossa pian</h1>
-  </div>
+  <form-wizard @on-complete="onComplete"
+                  @on-loading="setLoading"
+                  @on-error="handleErrorMessage"
+                  title="Automaattinen tiivistäminen"
+                  subtitle="Valitsee laskennallisesti merkityksellisimmät lauseet"
+                  shape="circle"
+                  color="gray"
+                  error-color="#e74c3c">
+    <tab-content title="Personal details"
+                 :before-change="validateFileInput"
+                 icon="ti-user">
+
+       <p> Anna tiivistettävät tiedostot. </p>
+       <input id="summary_files" type="file" v-on:change="setSummaryFiles($event)"
+              accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              multiple />
+    </tab-content>
+    <tab-content title="Käytettävä tiivistelmä menetelmä"
+                 icon="ti-settings">
+
+                 <div class="summary-method">
+                   <div class="input-row">
+                     <input type="radio" id="summary-method-embedding" name="summary-method" v-on:change="addSummaryMethod('embedding')" checked />
+                     <label for="summary-method-embedding"> Sanastoon perustuva tiivistys-menetelmä   &nbsp;</label>
+                     <div class="tooltip">Lisätietoja
+                       <span class="tooltiptext">Valitsee lauseet, joiden sanojen yhteenlaskettu semanttinen etäisyys alkuperäisestä tekstistä on pienin mahdollinen.</span>
+                     </div>
+                      &nbsp;
+                     <div class="tooltip" > <a href="http://www.aclweb.org/anthology/D15-1232" >Artikkeli </a>
+                       <span class="tooltiptext">  Kobayashi, Hayato, Masaki Noguchi, and Taichi Yatsuka. "Summarization based on embedding distributions." Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing. 2015.</span>
+                     </div>
+                   </div>
+                   <div class="input-row">
+                     <input type="radio" id="summary-method-graph" name="summary-method" v-on:change="addSummaryMethod('graph')" />
+                     <label for="summary-method-graph"> Sanoihin sanoihin perustuva tiivistys-menetelmä &nbsp;</label>
+                     <div class="tooltip">Lisätietoja
+                       <span class="tooltiptext">Valitsee lauseet, joissa on eniten samoja sanoja, kuin muissa lauseissa.</span>
+                     </div>
+                      &nbsp;
+                     <div class="tooltip" > <a href="https://www.jair.org/index.php/jair/article/view/10396/24901" >Artikkeli </a>
+                       <span class="tooltiptext">Erkan, Günes, and Dragomir R. Radev. "Lexrank: Graph-based lexical centrality as salience in text summarization." Journal of artificial intelligence research 22 (2004): 457-479.</span>
+                     </div>
+                   </div>
+                 </div>
+    </tab-content>
+    <tab-content title="Tiivistelmän pituus"
+                 icon="ti-check"
+                 :before-change="validateMethodLength">
+          <div>
+             <p>Tiivistelmän pituus sanoissa </p>
+             <input type="number" name="quantity" min="10" max="300" value="25" v-on:change="setSummaryLength($event)" />
+         </div>
+    </tab-content>
+    <tab-content title="Syötetiedoston muoto"
+                 icon="ti-check">
+             Missä muodossa haluat tiedoston ulos?
+             <select id="returnType" v-on:change="changeSummaryReturnType($event)" >
+                <option value="docx">Word (.docx) tiedosto </option>
+                <option value="txt">Teksi (.txt) tiedosto </option>
+              </select>
+    </tab-content>
+
+    <div class="loader" v-if="loadingWizard"></div>
+    <div v-if="errorMsg">
+      <span class="error">{{errorMsg}}</span>
+    </div>
+  </form-wizard>
+
 </template>
 
 <script>
+import Vue from 'vue';
+import VueFormWizard from 'vue-form-wizard';
+import 'vue-form-wizard/dist/vue-form-wizard.min.css'
+import { validateFileInput } from './tools.js';
+import '../styles/tooltip.css';
+
+Vue.use(VueFormWizard)
 export default {
-  data() {
-    return {
-      notes: [{
-        id: 1,
-        text: 'Marco',
-      }, {
-        id: 2,
-        text: 'Polo'
-      }]
-    };
-  }
+   data(){
+      return {
+       loadingWizard: false,
+       errorMsg: null,
+       count: 0,
+       rules: {
+          summaryLength: [{
+            required: true,
+            message: 'Please input Activity name',
+            trigger: 'blur',
+            min: 10,
+            max: 300
+          }]
+        }
+     }
+    },
+    methods: {
+     onComplete: function(){
+         alert('Yay. Done!');
+      },
+      setLoading: function(value) {
+          this.loadingWizard = value
+      },
+      handleErrorMessage: function(errorMsg){
+        this.errorMsg = errorMsg
+      },
+      setSummaryFiles: function(e) {
+        this.$store.commit('SET_SUMMARY_FILES', e.currentTarget.files)
+      },
+      addSummaryMethod: function(method) {
+        this.$store.commit('SET_SUMMARY_METHOD', method)
+      },
+      validateFileInput:function() {
+        const files = this.$store.state.summaryFiles
+        return validateFileInput(files)
+       },
+       setSummaryLength: function(e) {
+         this.$store.commit('SET_SUMMARY_LENGTH', e.currentTarget.value)
+       },
+       validateMethodLength: function() {
+         return new Promise((resolve, reject) => {
+           const len = this.$store.state.summaryLength
+           if (len < 10 || len > 300) {
+             reject("Pituuden on oltava 10 - 300 sanaa.")
+           } else {
+             resolve(true)
+           }
+          })
+       },
+       changeSummaryReturnType: function(e) {
+         const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
+         this.$store.commit('CHANGE_SUMMARY_RETURN_TYPE', returnType)
+       }
+     }
 }
 </script>
 
-<style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  width: 400px;
-  height: 600px;
-  margin: 5px;
-  padding: 10px;
-  border: 1px solid green;
+<style>
+span.error{
+  color:#e74c3c;
+  font-size:20px;
+  display:flex;
+  justify-content:center;
 }
 
-.label {
-  font-size: 10px;
-  color: green;
+.summary-method {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-row {
+  display: flex;
+  justify-content: left;
+  width: 90%;
 }
 </style>

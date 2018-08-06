@@ -23,7 +23,9 @@ import SummarizeWizard from './components/SummarizeWizard.vue';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { bus } from './main.js';
 import {SET_NER_FILE, ADD_NER_NAME, TOGGLE_SUBSTITION, CHANGE_SUBSTITION,
-        CHANGE_NER_RETURN_TYPE, CHANGE_NER_TOGGLE_SEARCH_PERSONID} from './mutation-types.js';
+        CHANGE_NER_RETURN_TYPE, CHANGE_NER_TOGGLE_SEARCH_PERSONID,
+        SET_SUMMARY_FILES, SET_SUMMARY_METHOD, SET_SUMMARY_LENGTH,
+        CHANGE_SUMMARY_RETURN_TYPE } from './mutation-types.js';
 
 
 function fetchApiUrl() {
@@ -44,7 +46,11 @@ const store = new Vuex.Store({
     ners_fetched: false,
     apiurl: API_URL,
     nerReturnType: 'docx',
-    nerSearchPersonid: true
+    nerSearchPersonid: true,
+    summaryFiles: null,
+    summaryMethod: 'embedding',
+    summaryLength: 25,
+    summaryReturnType: 'docx'
   },
   mutations: {
     [SET_NER_FILE] (state, file) {
@@ -70,6 +76,18 @@ const store = new Vuex.Store({
     },
     [CHANGE_NER_TOGGLE_SEARCH_PERSONID] (state) {
       state.nerSearchPersonid = !state.nerSearchPersonid
+    },
+    [SET_SUMMARY_FILES] (state, files) {
+      state.summaryFiles = files
+    },
+    [SET_SUMMARY_METHOD] (state, method) {
+      state.summaryMethod = method
+    },
+    [SET_SUMMARY_LENGTH] (state, length) {
+      state.summaryLength = length
+    },
+    [CHANGE_SUMMARY_RETURN_TYPE] (state, returnType) {
+      state.summaryReturnType = returnType
     }
   },
   plugins: [

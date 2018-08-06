@@ -1,18 +1,19 @@
 <template>
  <form-wizard @on-complete="onComplete"
-                       @on-error="handleErrorMessage"
-                       @on-loading="setLoading"
-                       @on-validate="fetchNERs"
-                       :start-index="0"
-                       title="Henkilötietojen piilottaminen"
-                       subtitle="Korvaa erisnimet ja henkilötunnukset tekstistä"
-                       color="#e67e22">
-     <tab-content title="Tiedosto"
+              @on-loading="setLoading"
+               @on-error="handleErrorMessage"
+               @on-validate="fetchNERs"
+               :start-index="0"
+               title="Henkilötietojen piilottaminen"
+               subtitle="Korvaa erisnimet ja henkilötunnukset tekstistä"
+               color="#e67e22">
+   <tab-content title="Tiedosto"
                   :before-change="validateNerFile"
                   icon="ti-user">
 
-       <p > Anna tiedosto, joka sisältää korvattavan tekstin. </p>
-       <input id="ner_file" type="file" v-on:change="setNerFile($event)"/>
+       <p> Anna tiedosto, joka sisältää korvattavan tekstin. </p>
+       <input id="ner_file" type="file" v-on:change="setNerFile($event)"
+              accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"/>
 
        <div>
            <input type="checkbox" id="detect_hetu" v-model="checked" />
@@ -73,7 +74,7 @@ import Vue from 'vue';
 import VueFormWizard from 'vue-form-wizard';
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { saveAs } from 'file-saver/FileSaver';
-import { getSubstiteByIndex } from './tools.js';
+import { getSubstiteByIndex, validateFileInput } from './tools.js';
 
 function toggleSubstituteMap(store, value) {
   const keys = store.state.nernames.filter((obj) => obj.selected)
@@ -125,25 +126,8 @@ export default {
        })
      },
      validateNerFile: function() {
-       const file = this.$store.state.nerFile
-       return new Promise((resolve, reject) => {
-           var filesOk = false;
-           const supportedFileTypes = ['.pdf','.docx', '.txt']
-           if (!file) {
-             reject('Anna tiedosto.')
-             return;
-           }
-           for (var i = 0; i < supportedFileTypes.length; i++) {
-             if(file.name.indexOf(supportedFileTypes[i]) !== -1) {
-               filesOk = true;
-             }
-           }
-           if (!filesOk) {
-             reject('Tiedosto ei kelpaa, anna yksi seuraavista ' + supportedFileTypes)
-           } else {
-             resolve(true)
-           }
-         })
+        const nerFile = this.$store.state.nerFile
+        return validateFileInput((nerFile) ? [nerFile] : undefined)
        },
        fetchNERs: function() {
          const file = this.$store.state.nerFile
@@ -237,7 +221,7 @@ export default {
         get () {
           return this.$store.state.nerSearchPersonid
         },
-        set (value) {
+        set (value) { // eslint-disable-line no-unused-vars
           this.$store.commit('CHANGE_NER_TOGGLE_SEARCH_PERSONID')
         }
       }
@@ -246,8 +230,53 @@ export default {
 </script>
 
 <style scoped>
-.error {
-    color: red;
+span.error{
+  color:#e74c3c;
+  font-size:20px;
+  display:flex;
+  justify-content:center;
+}
+/* This is a css loader. It's not related to vue-form-wizard */
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-left: 1.1em solid #e74c3c;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
 .ner-container {
   display: flex;
