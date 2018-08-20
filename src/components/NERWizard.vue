@@ -161,7 +161,7 @@ export default {
            }
          }).catch((e) => {
            // eslint-disable-next-line
-           error.log(e);
+           console.error(e);
          })
          this.setLoading(true)
        },

@@ -170,7 +170,6 @@ export default {
             error.log(e)
           })
           this.setLoading(true)
-          alert(text)
         },
      },
      computed: {
