@@ -31,7 +31,7 @@
                        <span class="tooltiptext">Valitsee lauseet, joiden sanojen yhteenlaskettu semanttinen etäisyys alkuperäisestä tekstistä on pienin mahdollinen.</span>
                      </div>
                       &nbsp;
-                     <div class="tooltip" > <a href="http://www.aclweb.org/anthology/D15-1232" >Artikkeli </a>
+                     <div class="tooltip" > <a v-on:click="openLinkInNewTab('http://www.aclweb.org/anthology/D15-1232')" >Artikkeli </a>
                        <span class="tooltiptext">  Kobayashi, Hayato, Masaki Noguchi, and Taichi Yatsuka. "Summarization based on embedding distributions." Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing. 2015.</span>
                      </div>
                    </div>
@@ -42,7 +42,7 @@
                        <span class="tooltiptext">Valitsee lauseet, joissa on eniten samoja sanoja, kuin muissa lauseissa.</span>
                      </div>
                       &nbsp;
-                     <div class="tooltip" > <a href="https://www.jair.org/index.php/jair/article/view/10396/24901" >Artikkeli </a>
+                     <div class="tooltip" > <a v-on:click="openLinkInNewTab('https://www.jair.org/index.php/jair/article/view/10396/24901')" >Artikkeli </a>
                        <span class="tooltiptext">Erkan, Günes, and Dragomir R. Radev. "Lexrank: Graph-based lexical centrality as salience in text summarization." Journal of artificial intelligence research 22 (2004): 457-479.</span>
                      </div>
                    </div>
@@ -114,6 +114,9 @@ export default {
      }
     },
     methods: {
+      openLinkInNewTab: function(url) {
+        window.open(url, '_blank');
+      },
       setLoading: function(value) {
           this.loadingWizard = value
       },
