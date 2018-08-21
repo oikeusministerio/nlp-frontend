@@ -27,6 +27,7 @@
      <tab-content title="Valitse korvattavat sanat"
                   icon="ti-settings"
                   :before-change="validateChosenNERs" >
+      <p v-if="loadingWizard"> Haetaan erisnimiä. Tässä menee 1 - 4 minuuttia. </p>
       <div v-show="$store.state.ners_fetched">
         <fieldset>
             <legend>Valitse korvattavat sanat</legend>
@@ -63,7 +64,7 @@
 
      </tab-content>
 
-     <div class="loader" v-if="loadingWizard">LOLO</div>
+     <div class="loader" v-if="loadingWizard"></div>
       <div v-if="errorMsg">
         <span class="error">{{errorMsg}}</span>
       </div>
@@ -160,6 +161,7 @@ export default {
              }
            }
          }).catch((e) => {
+           this.setLoading(false);
            // eslint-disable-next-line
            console.error(e);
          })

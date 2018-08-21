@@ -169,6 +169,7 @@ export default {
              this.setLoading(false)
              saveAs(res)
           }).catch((e) => {
+            this.setLoading(false)
             // eslint-disable-next-line
             error.log(e)
           })
