@@ -16,6 +16,9 @@
                  icon="ti-user">
 
        <p> Anna tiivistettävät tiedostot. </p>
+       <p> Tiedostoissa tulee olla otsikointi, jolla tekstit pilkotaa kappaleisiin.</P>
+       <p> Word-tiedostoissa otsikot tunnistetaan Otsikko-tyylityksillä.</p>
+       <p> PDF-tiedostoissa otsikointi tunnistetaan rivinvaihdosta. </p>
        <input id="summary_files" type="file" v-on:change="setSummaryFiles($event)"
               accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               multiple />
@@ -52,7 +55,7 @@
                  icon="ti-check"
                  :before-change="validateMethodLength">
           <div>
-             <p>Tiivistelmän pituus sanoissa </p>
+             <p>Tiivistelmän pituus sanoissa per kappale. </p>
              <input type="number" name="quantity" min="10" max="300" value="25" v-on:change="setSummaryLength($event)" />
          </div>
     </tab-content>

@@ -132,107 +132,110 @@ export default {
      validateNerFile: function() {
         const nerFile = this.$store.state.nerFile
         return validateFileInput((nerFile) ? [nerFile] : undefined)
-       },
-       fetchNERs: function() {
-         const file = this.$store.state.nerFile
-         const apiurl = this.$store.state.apiurl
-         const searchPersonid = this.$store.state.nerSearchPersonid
-         var path = apiurl + '/entities/directory'
-         path += '?return_type=json&'
-         path += 'person_ids=' + searchPersonid
-         var fd = new FormData();
-         fd.append("file-0", file);
-         fetch(path, {
-           method: 'POST',
-           body: fd
-         }).then(res=>res.json())
-         .then((response) => {
-           this.setLoading(false);
-           const namesObject = response.names
-           const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
-           for (var i = 0; i < names.length; i++) {
-             var exists = (this.$store.state.nernames.length == 0) ? false : this.$store.state.nernames.some((obj) => obj.name == names[i])
-             if (!exists) {
-               this.$store.commit('ADD_NER_NAME', {
-                 name: names[i],
-                 selected: false,
-                 substitute: ''
-               })
-             }
-           }
-         }).catch((e) => {
-           this.setLoading(false);
-           // eslint-disable-next-line
-           console.error(e);
-         })
-         this.setLoading(true)
-       },
-       addNERToBeSubstituted: function(e) {
-         const value = e.currentTarget.value
-         toggleSubstituteMap(this.$store, value)
-       },
-       selectAllNERs: function(e) {
-         var checked = e.currentTarget.checked;
-         const checkboxes = document.getElementsByName(e.currentTarget.name);
-         for(var i in checkboxes) {
-           var box = checkboxes[i]
-           if (box instanceof HTMLInputElement) {
-             var needToggle = box.checked !== checked
-             box.checked = checked
-             if (box.value != 'select_all' && needToggle) {
-               toggleSubstituteMap(this.$store, box.value)
-             }
+     },
+     fetchNERs: function() {
+       if (this.$store.state.ners_fetched) {
+         return true;
+       }
+       const file = this.$store.state.nerFile
+       const apiurl = this.$store.state.apiurl
+       const searchPersonid = this.$store.state.nerSearchPersonid
+       var path = apiurl + '/entities/directory'
+       path += '?return_type=json&'
+       path += 'person_ids=' + searchPersonid
+       var fd = new FormData();
+       fd.append("file-0", file);
+       fetch(path, {
+         method: 'POST',
+         body: fd
+       }).then(res=>res.json())
+       .then((response) => {
+         this.setLoading(false);
+         const namesObject = response.names
+         const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
+         for (var i = 0; i < names.length; i++) {
+           var exists = (this.$store.state.nernames.length == 0) ? false : this.$store.state.nernames.some((obj) => obj.name == names[i])
+           if (!exists) {
+             this.$store.commit('ADD_NER_NAME', {
+               name: names[i],
+               selected: false,
+               substitute: ''
+             })
            }
          }
-       },
-       replaceWords: function() {
-         const filtered = this.$store.state.nernames.filter(obj => obj.selected)
-         const words = filtered.map(obj => obj.name)
-         const substitutes = filtered.map(obj => obj.substitute)
-         const file = this.$store.state.nerFile
-         const apiurl = this.$store.state.apiurl
-         const returnType = this.$store.state.nerReturnType
-         var path = apiurl + '/entities/replace' // http://127.0.0.1:5000
-         var fd = new FormData();
-         fd.append("file-0", file);
-         path += "?return_type=" + returnType + "&"
-         path += "nerlist=" + encodeURIComponent(JSON.stringify(words)) + "&";
-         path += "substitutes=" + encodeURIComponent(JSON.stringify(substitutes))
-         fetch(path, {
-           method: 'POST',
-           body: fd
-         }).then(res => res.blob())
-        .then((res) => {
-            saveAs(res)
-         }).catch((e) => {
-           // eslint-disable-next-line
-           error.log(e)
-         })
-       },
-        changeSubstitute: function(e) {
-        const id = e.currentTarget.id
-        const name = id.substring(0, id.length - 11)
-        const newSubstitute = e.currentTarget.value
-        this.$store.commit('CHANGE_SUBSTITION', {
-          name: name,
-          substitute: newSubstitute
-        })
-      },
-      changeNerReturnType: function(e) {
-        const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
-        this.$store.commit('CHANGE_NER_RETURN_TYPE', returnType)
-      }
+       }).catch((e) => {
+         this.setLoading(false);
+         // eslint-disable-next-line
+         console.error(e);
+       })
+       this.setLoading(true)
+     },
+     addNERToBeSubstituted: function(e) {
+       const value = e.currentTarget.value
+       toggleSubstituteMap(this.$store, value)
+     },
+     selectAllNERs: function(e) {
+       var checked = e.currentTarget.checked;
+       const checkboxes = document.getElementsByName(e.currentTarget.name);
+       for(var i in checkboxes) {
+         var box = checkboxes[i]
+         if (box instanceof HTMLInputElement) {
+           var needToggle = box.checked !== checked
+           box.checked = checked
+           if (box.value != 'select_all' && needToggle) {
+             toggleSubstituteMap(this.$store, box.value)
+           }
+         }
+       }
+     },
+     replaceWords: function() {
+       const filtered = this.$store.state.nernames.filter(obj => obj.selected)
+       const words = filtered.map(obj => obj.name)
+       const substitutes = filtered.map(obj => obj.substitute)
+       const file = this.$store.state.nerFile
+       const apiurl = this.$store.state.apiurl
+       const returnType = this.$store.state.nerReturnType
+       var path = apiurl + '/entities/replace' // http://127.0.0.1:5000
+       var fd = new FormData();
+       fd.append("file-0", file);
+       path += "?return_type=" + returnType + "&"
+       path += "nerlist=" + encodeURIComponent(JSON.stringify(words)) + "&";
+       path += "substitutes=" + encodeURIComponent(JSON.stringify(substitutes))
+       fetch(path, {
+         method: 'POST',
+         body: fd
+       }).then(res => res.blob())
+      .then((res) => {
+          saveAs(res)
+       }).catch((e) => {
+         // eslint-disable-next-line
+         error.log(e)
+       })
+     },
+    changeSubstitute: function(e) {
+      const id = e.currentTarget.id
+      const name = id.substring(0, id.length - 11)
+      const newSubstitute = e.currentTarget.value
+      this.$store.commit('CHANGE_SUBSTITION', {
+        name: name,
+        substitute: newSubstitute
+      })
     },
-    computed: {
-      checked: {
-        get () {
-          return this.$store.state.nerSearchPersonid
-        },
-        set (value) { // eslint-disable-line no-unused-vars
-          this.$store.commit('CHANGE_NER_TOGGLE_SEARCH_PERSONID')
-        }
+    changeNerReturnType: function(e) {
+      const returnType = e.currentTarget.options[e.currentTarget.selectedIndex].value
+      this.$store.commit('CHANGE_NER_RETURN_TYPE', returnType)
+    }
+  },
+  computed: {
+    checked: {
+      get () {
+        return this.$store.state.nerSearchPersonid
+      },
+      set (value) { // eslint-disable-line no-unused-vars
+        this.$store.commit('CHANGE_NER_TOGGLE_SEARCH_PERSONID')
       }
     }
+  }
 }
 </script>
 
