@@ -79,6 +79,7 @@ import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 import { saveAs } from 'file-saver/FileSaver';
 import { getSubstiteByIndex, validateFileInput } from './tools.js';
 import '../styles/loader.css';
+import utf8 from 'utf8';
 
 function toggleSubstituteMap(store, value) {
   const keys = store.state.nernames.filter((obj) => obj.selected)
@@ -152,7 +153,13 @@ export default {
        .then((response) => {
          this.setLoading(false);
          const namesObject = response.names
-         const names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
+         var names = namesObject.filenames.map((fn) => namesObject[fn])[0] // This works only for one file.
+         names = names.map((n) => {
+           if (n.indexOf('\\') !== -1) {
+             return utf8.decode(n);
+           }
+           return n;
+         })
          for (var i = 0; i < names.length; i++) {
            var exists = (this.$store.state.nernames.length == 0) ? false : this.$store.state.nernames.some((obj) => obj.name == names[i])
            if (!exists) {

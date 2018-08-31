@@ -10,6 +10,7 @@
   "dependencies": {
     "file-saver": "^1.3.8",
     "js-cookie": "^2.2.0",
+    "utf8": "^3.0.0",
     "vue": "^2.5.16",
     "vue-form-wizard": "^0.8.4",
     "vuex": "^3.0.1",
